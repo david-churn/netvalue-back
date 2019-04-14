@@ -1,0 +1,23 @@
+{
+  "name": "projectnvback",
+  "version": "1.0.0",
+  "description": "support for Net Value website",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "finance"
+  ],
+  "author": "David Churn",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "install": "^0.12.2",
+    "mysql2": "^1.6.5",
+    "sequelize": "^5.3.5"
+  }
+}
