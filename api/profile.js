@@ -1,15 +1,15 @@
-'use strict'
+"use strict"
 // Handle requests dealing with the users profile.
 
-const express = require('express');
-const {sequelize} = require ('../database/connection');
-const {Op} = require('../database/connection');
-const {Person} = require('../models/person');
+const express = require("express");
+const {sequelize} = require ("../database/connection");
+const {Op} = require("../database/connection");
+const {Person} = require("../models/person");
 
 let router = express.Router();
 
 // get all fields
-router.get('/gid/:gid', (req,res) => {
+router.get("/gid/:gid", (req,res) => {
   Person.findOne({
     where : {
       gID: req.params.gid,
@@ -24,19 +24,19 @@ router.get('/gid/:gid', (req,res) => {
 });
 
 // delete from all tables
-router.delete('/', (req,res) => {
-  const data = {title: 'Homepage'};
+router.delete("/", (req,res) => {
+  const data = {title: "Homepage"};
   res.send(data);
 });
 
 // insert new profile, creating profile and 1st asset "Cash"
-router.post('/', (req,res) => {
-  const data = {title: 'Homepage'};
+router.post("/", (req,res) => {
+  const data = {title: "Homepage"};
   res.send(data);
 });
 
 // update the columns on the profile screen.
-router.patch('/upduser/:id', (req,res) => {
+router.patch("/upduser/:id", (req,res) => {
   Person.update({
     nickNm : req.body.nickNm,
     emailStr : req.body.emailStr,
