@@ -18,6 +18,7 @@
     "express": "^4.16.4",
     "install": "^0.12.2",
     "mysql2": "^1.6.5",
-    "sequelize": "^5.3.5"
+    "sequelize": "^5.3.5",
+    "winston": "^3.2.1"
   }
 }

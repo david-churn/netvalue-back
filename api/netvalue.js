@@ -1,5 +1,7 @@
 "use strict"
-// Handle requests dealing with the users profile.
+// 4/21/2019 David Churn created
+
+// Handle the database reads/writes for the net value assets and debts.
 
 const express = require("express");
 const {sequelize} = require ("../database/connection");
@@ -16,7 +18,6 @@ router.get("/gid/:gid", (req,res) => {
       }
   })
   .then (person => {
-    console.log(`person=`,person);
     res.send(person);
   })
   .catch ((error) => {
