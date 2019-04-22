@@ -15,7 +15,7 @@ const Asset = sequelize.define('asset', {
       allowNull: false,
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
     },
-    updateAt: {
+    updatedAt: {
       type: Sequelize.DATE,
       allowNull: false,
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
@@ -54,8 +54,7 @@ const Asset = sequelize.define('asset', {
     }
   }, {
     tableName: 'asset'
-  });
-};
+});
 
 module.exports = {
   Asset

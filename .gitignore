@@ -1,3 +1,5 @@
 connection.js
 /database
 /node_modules
+
+*.log

@@ -14,7 +14,7 @@ const Debt = sequelize.define('debt', {
       allowNull: false,
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
     },
-    updateAt: {
+    updatedAt: {
       type: Sequelize.DATE,
       allowNull: false,
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
@@ -45,8 +45,7 @@ const Debt = sequelize.define('debt', {
     }
   }, {
     tableName: 'debt'
-  });
-};
+});
 
 module.exports = {
   Debt

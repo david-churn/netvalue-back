@@ -6,55 +6,49 @@
 const express = require("express");
 const {sequelize} = require ("../database/connection");
 const {Op} = require("../database/connection");
-const {Person} = require("../models/person");
+const {Asset} = require("../models/asset");
+const {Debt} = require("../models/debt");
 
 let router = express.Router();
 
 // get all fields
-router.get("/gid/:gid", (req,res) => {
-  Person.findOne({
+router.get("/read/:id", (req,res) => {
+  let resultObj = {};
+  Asset.findAll({
     where : {
-      gID: req.params.gid,
+      personID: req.params.id,
       }
   })
-  .then (person => {
-    res.send(person);
+  .then (assetObj => {
+    console.log(`assetObj=`,assetObj);
+    resultObj = {
+      assets: assetObj
+    };
+    console.log(`resultObj=`,resultObj);
+    Debt.findAll({
+      where: {
+        personID: req.params.id,
+      }
+    });
+  })
+  .then (debtObj => {
+    console.log(`debtObj=`,debtObj);
+    resultObj = {
+      debts: debtObj
+    }
+// how does this handle finding no rows?
+    res.send(resultObj);
   })
   .catch ((error) => {
     res.send(error);
   })
-});
-
-// delete from all tables
-router.delete("/", (req,res) => {
-  const data = {title: "Homepage"};
-  res.send(data);
 });
 
 // insert new profile, creating profile and 1st asset "Cash"
-router.post("/", (req,res) => {
-  const data = {title: "Homepage"};
+router.post("/write", (req,res) => {
+  const data = {title: "Updates under construction"};
   res.send(data);
 });
 
-// update the columns on the profile screen.
-router.patch("/upduser/:id", (req,res) => {
-  Person.update({
-    nickNm : req.body.nickNm,
-    emailStr : req.body.emailStr,
-    decimalStr : req.body.emailStr,
-    separatorStr : req.body.separatorStr,
-  },{
-    where: {
-      personID : req.params.id
-    }
-  })
-  .then (play => {
-    res.send(`updated`);
-  })
-  .catch ((error) => {
-    res.send(error);
-  })
-});
 
 module.exports = router;
