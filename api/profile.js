@@ -31,6 +31,7 @@ router.delete("/", (req,res) => {
 });
 
 // insert new profile, creating profile and 1st asset "Cash"
+// .findOrCreate can handle new person.
 router.post("/", (req,res) => {
   const data = {title: "Homepage"};
   res.send(data);

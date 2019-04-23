@@ -47,7 +47,7 @@ const Person = sequelize.define('person', {
     allowNull: true
   }
 }, {
-  tableName: 'person'
+  freezeTableName: true
 });
 
 module.exports = {

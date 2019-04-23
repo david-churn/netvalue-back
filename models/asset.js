@@ -53,7 +53,7 @@ const Asset = sequelize.define('asset', {
       allowNull: true
     }
   }, {
-    tableName: 'asset'
+    freezeTableName: true
 });
 
 module.exports = {

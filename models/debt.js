@@ -44,7 +44,7 @@ const Debt = sequelize.define('debt', {
       allowNull: false
     }
   }, {
-    tableName: 'debt'
+    freezeTableName: true
 });
 
 module.exports = {

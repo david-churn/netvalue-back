@@ -19,24 +19,17 @@ router.get("/read/:id", (req,res) => {
       personID: req.params.id,
       }
   })
-  .then (assetObj => {
-    console.log(`assetObj=`,assetObj);
-    resultObj = {
-      assets: assetObj
-    };
-    console.log(`resultObj=`,resultObj);
-    Debt.findAll({
+  .then (assetArr => {
+    resultObj.assets = assetArr.map(asset => asset.dataValues);
+
+    return Debt.findAll({
       where: {
         personID: req.params.id,
       }
-    });
+    })
   })
-  .then (debtObj => {
-    console.log(`debtObj=`,debtObj);
-    resultObj = {
-      debts: debtObj
-    }
-// how does this handle finding no rows?
+  .then (debtArr => {
+    resultObj.debts = debtArr.map(debt => debt.dataValues);
     res.send(resultObj);
   })
   .catch ((error) => {
