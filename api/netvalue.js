@@ -63,8 +63,9 @@ router.get("/read/:id", (req,res) => {
 
 // insert new profile, creating profile and 1st asset "Cash"
 router.post("/write", (req,res) => {
-  const data = {title: "Updates under construction"};
-  res.send(data);
+  // const data = {title: "Updates under construction"};
+  // res.send(data);
+  console.log(`writing=`, req.data);
   for (let a=0; a < req.body.assets.length; a++) {
     console.log(`asset=`,req.body.assets[a]);
     if (req.body.assets[a].id < 0) {

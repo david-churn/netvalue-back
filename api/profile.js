@@ -16,8 +16,8 @@ router.get("/gid/:gid", (req,res) => {
       }
   })
   .then (person => {
-    console.log(`person=`,person);
-    res.send(person);
+    console.log(`person=`,person.dataValues);
+    res.send(person.dataValues);
   })
   .catch ((error) => {
     res.send(error);
