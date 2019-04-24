@@ -3,6 +3,7 @@
 
 // Handle the database reads/writes for the net value assets and debts.
 
+const axios = require("axios");
 const express = require("express");
 const {sequelize} = require ("../database/connection");
 const {Op} = require("../database/connection");
@@ -11,8 +12,12 @@ const {Debt} = require("../models/debt");
 
 let router = express.Router();
 const deleteStr = "delete";
+const iexUrlStr = "https://api.iextrading.com/1.0/stock/";
 
-// get all fields
+// get assets
+//  add prices to any stocks
+// get debts
+// return result
 router.get("/read/:id", (req,res) => {
   let resultObj = {};
   Asset.findAll({
@@ -21,6 +26,7 @@ router.get("/read/:id", (req,res) => {
       }
   })
   .then (assetArr => {
+    let lookupSymbols = "";
     resultObj.assets = assetArr.map(asset => {
       let feObj = {
         id: asset.dataValues.assetID,
@@ -32,10 +38,37 @@ router.get("/read/:id", (req,res) => {
         symbol: asset.dataValues.symbolID,
         shares: asset.dataValues.shareQty,
         price: 0,
-        company: 0
+        company: ""
       };
+      if (asset.dataValues.typeCd==="stock") {
+        lookupSymbols += (asset.dataValues.symbolID + ",");
+      }
       return feObj;
-    })
+    });
+    console.log(`resultObj=`,resultObj);
+    console.log(`lookupSymbols=${lookupSymbols}`);
+    if (lookupSymbols !== "") {
+      let requestStr = iexUrlStr + 'market/batch?symbols=' + lookupSymbols + '&types=quote';
+      console.log(`requestStr=${requestStr}`);
+      return axios.get(requestStr)
+    }
+    else {
+      return lookupSymbols
+    }
+  })
+  .then ((resp) => {
+    if (resp !== "") {
+      // match the quotes to the assets and calculate the resulting amount
+      console.log(`resp.data=`,resp.data);
+      // updAsset.price = resp.?.latestPrice.toDecFormat(4);
+      // updAsset.latestSource = resp.?.latestSource;
+      // updAsset.latestTime =
+      // resp.?.latestTime;
+      // updAsset.company = resp.?.companyName;
+      // updAsset.amount = resp.?.latestPrice * updAsset.shares).toDecFormat(2);
+      // console.log(`unrounded ${updAsset.amount}=${resp.?.latestPrice}*${updAsset.shares}`);
+    }
+
     return Debt.findAll({
       where: {
         personID: req.params.id,
@@ -62,14 +95,13 @@ router.get("/read/:id", (req,res) => {
 });
 
 // insert new profile, creating profile and 1st asset "Cash"
-router.post("/write", (req,res) => {
-  // const data = {title: "Updates under construction"};
-  // res.send(data);
-  console.log(`writing=`, req.data);
+router.post("/write/:id", (req,res) => {
+  console.log(`writing for personID=${req.params.id}`, req.body);
   for (let a=0; a < req.body.assets.length; a++) {
     console.log(`asset=`,req.body.assets[a]);
     if (req.body.assets[a].id < 0) {
       let newID = Asset.create({
+        personID: req.params.id,
         typeCd: req.body.assets[a].type,
         descriptionStr: req.body.assets[a].description,
         balanceAmt: req.body.assets[a].amount,
@@ -82,7 +114,7 @@ router.post("/write", (req,res) => {
       }).complete((err,result) => err ? 0 : result.assetID)
       req.body.assets[a].id = newID;
     }
-    else if (req.body.assets[a].type = deleteStr) {
+    else if (req.body.assets[a].type === deleteStr) {
       Asset.destroy({
         where: {
           assetID : req.body.assets[a].id
@@ -118,6 +150,7 @@ router.post("/write", (req,res) => {
     }
   }
   for (let d=0; d < req.body.debts.length; d++) {
+    console.log(`debt=`,req.body.debts[d]);
     if (req.body.debts[d].id < 0) {
       let newID = Debt.create({
         typeCd: req.body.debts[d].type,
@@ -130,7 +163,7 @@ router.post("/write", (req,res) => {
       }).complete((err,result) => err ? 0 : result.debtID)
       req.body.debts[d].id = newID;
     }
-    else if (req.body.debts[d].type = deleteStr) {
+    else if (req.body.debts[d].type === deleteStr) {
       Debt.destroy({
         where: {
           debtID : req.body.debts[d].id
@@ -166,8 +199,11 @@ router.post("/write", (req,res) => {
     }
   }
   // filter out deletes
-  res.send(req.body);
+  let respObj = {
+    assets: req.body.assets.filter(asset => asset.type !== deleteStr),
+    debts: req.body.debts.filter(debt => debt.type !== deleteStr)
+  }
+  res.send(respObj);
 });
-
 
 module.exports = router;

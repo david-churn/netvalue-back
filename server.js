@@ -68,7 +68,6 @@ app.use("/stock", lookup);
 // Handle saving and reading asset and debt items.
 app.use("/nv", netvalue);
 
-
 app.listen(3000, () => {
   console.log(`>>> Net Value server started <<<`);
 })
