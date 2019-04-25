@@ -2,7 +2,7 @@
 // 4/21/2019 David Churn created
 
 // Handle the database reads/writes for the net value assets and debts.
-
+const _ = require("lodash");
 const axios = require("axios");
 const express = require("express");
 const {sequelize} = require ("../database/connection");
@@ -58,17 +58,18 @@ router.get("/read/:id", (req,res) => {
   })
   .then ((resp) => {
     if (resp !== "") {
-      // match the quotes to the assets and calculate the resulting amount
-      console.log(`resp.data=`,resp.data);
-      // updAsset.price = resp.?.latestPrice.toDecFormat(4);
-      // updAsset.latestSource = resp.?.latestSource;
-      // updAsset.latestTime =
-      // resp.?.latestTime;
-      // updAsset.company = resp.?.companyName;
-      // updAsset.amount = resp.?.latestPrice * updAsset.shares).toDecFormat(2);
-      // console.log(`unrounded ${updAsset.amount}=${resp.?.latestPrice}*${updAsset.shares}`);
+      // match stock quotes to the assets and calculate the resulting amount
+      let quoteArr = Object.getOwnPropertyNames(resp.data);
+      quoteArr.forEach((symbol) => {
+        let assetIdx = _.findIndex(resultObj.assets, obj => obj.symbol === symbol);
+        resultObj.assets[assetIdx].price = Number(resp.data[symbol].quote.latestPrice).toFixed(4);
+        resultObj.assets[assetIdx].latestSource = resp.data[symbol].quote.latestSource;
+        resultObj.assets[assetIdx].latestTime = resp.data[symbol].quote.latestTime;
+        resultObj.assets[assetIdx].company = resp.data[symbol].quote.companyName;
+        resultObj.assets[assetIdx].amount = Number(resp.data[symbol].quote.latestPrice * resultObj.assets[assetIdx].shares).toFixed(2);
+      });
     }
-
+    console.log(`read Debts`);
     return Debt.findAll({
       where: {
         personID: req.params.id,
@@ -98,6 +99,10 @@ router.get("/read/:id", (req,res) => {
 router.post("/write/:id", (req,res) => {
   console.log(`writing for personID=${req.params.id}`, req.body);
   for (let a=0; a < req.body.assets.length; a++) {
+    if (req.body.assets[a].type==="stock") {
+      req.body.assets[a].amount = null;
+      req.body.assets[a].symbol = req.body.assets[a].symbol.toUpperCase();
+    }
     console.log(`asset=`,req.body.assets[a]);
     if (req.body.assets[a].id < 0) {
       let newID = Asset.create({
@@ -111,8 +116,14 @@ router.post("/write/:id", (req,res) => {
         shareQty: req.body.assets[a].shares
       }, {
         isNewRecord:true
-      }).complete((err,result) => err ? 0 : result.assetID)
-      req.body.assets[a].id = newID;
+      })
+      .then(asset => {
+        console.log(`then asset=`,asset.dataValues);
+        req.body.assets[a].id = asset.dataValues.assetID;
+      })
+      .catch (error => {
+        throw error;
+      })
     }
     else if (req.body.assets[a].type === deleteStr) {
       Asset.destroy({
@@ -160,8 +171,14 @@ router.post("/write/:id", (req,res) => {
         monthlyPaymentRt: req.body.debts[d].payment,
       }, {
         isNewRecord:true
-      }).complete((err,result) => err ? 0 : result.debtID)
-      req.body.debts[d].id = newID;
+      })
+      .then(debt => {
+        console.log(`then debt=`,debt.dataValues);
+        req.body.debts[d].id = debt.dataValues.debtID;
+      })
+      .catch (error => {
+        throw error;
+      })
     }
     else if (req.body.debts[d].type === deleteStr) {
       Debt.destroy({
@@ -187,7 +204,7 @@ router.post("/write/:id", (req,res) => {
         shareQty: req.body.debts[d].shares
       }, {
         where: {
-          assetID : req.body.debts[d].id
+          debtID : req.body.debts[d].id
         }
       })
       .then (debt => {
@@ -203,6 +220,8 @@ router.post("/write/:id", (req,res) => {
     assets: req.body.assets.filter(asset => asset.type !== deleteStr),
     debts: req.body.debts.filter(debt => debt.type !== deleteStr)
   }
+  // need to wait for all the database updates before sending this back...
+  console.log(`respObj=`,respObj);
   res.send(respObj);
 });
 

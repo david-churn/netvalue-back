@@ -7,7 +7,8 @@ const Debt = sequelize.define('debt', {
     debtID: {
       type: Sequelize.BIGINT,
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     createdAt: {
       type: Sequelize.DATE,
