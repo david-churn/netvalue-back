@@ -215,14 +215,16 @@ router.post("/write/:id", (req,res) => {
       })
     }
   }
-  // filter out deletes
-  let respObj = {
-    assets: req.body.assets.filter(asset => asset.type !== deleteStr),
-    debts: req.body.debts.filter(debt => debt.type !== deleteStr)
-  }
-  // need to wait for all the database updates before sending this back...
-  console.log(`respObj=`,respObj);
-  res.send(respObj);
+// need to wait for all the database updates before proceeding
+  sequelize.sync().then(() => {
+    // filter out deletes
+    let respObj = {
+      assets: req.body.assets.filter(asset => asset.type !== deleteStr),
+      debts: req.body.debts.filter(debt => debt.type !== deleteStr)
+    };
+    console.log(`respObj=`,respObj);
+    res.send(respObj);
+  })
 });
 
 module.exports = router;

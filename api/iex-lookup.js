@@ -18,20 +18,8 @@ const iexCompanyStr = "/company?filter=companyName,exchange,industry,website,sec
 const iexPriceStr = "/quote?filter=companyName,latestPrice,latestSource,latestTime";
 const iexUrlStr = "https://api.iextrading.com/1.0/stock/";
 
-// What the front end is expecting on a full lookup.
-// stockObj: {
-//   symbol: "",
-//   exchange: "",
-//   latestPrice: undefined,
-//   latestSource: "",
-//   latestTime: "",
-//   companyName: "",
-//   industry: "",
-//   sector: "",
-//   website: ""
-// },
-
 // get only the price fields
+// note, the symbol field was encoded by the caller.
 router.get("/price/:symbol", (req,res) => {
   let iexRequest = iexUrlStr + req.params.symbol + iexPriceStr;
   console.log(`iexRequest=${iexRequest}`);
@@ -46,6 +34,7 @@ router.get("/price/:symbol", (req,res) => {
     })
 });
 
+// note, the symbol field was encoded by the caller.
 router.get("/company/:symbol", (req,res) => {
   let iexRequest = iexUrlStr + req.params.symbol + iexPriceStr;
   let stockObj = {};
