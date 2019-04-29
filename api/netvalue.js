@@ -14,6 +14,61 @@ let router = express.Router();
 const deleteStr = "delete";
 const iexUrlStr = "https://api.iextrading.com/1.0/stock/";
 
+// insert a new asset and return the generated id
+router.post("/asset/:id/:type", (req,res) => {
+  let newType = decodeURIComponent(req.params.type);
+  let newAsset = {
+    personID: req.params.id,
+    typeCd: newType,
+    descriptionStr: "new asset"
+  };
+  if (newType === "saving") {
+    newAsset.balanceAmt = 0;
+    newAsset.annualPercentRt = 0;
+    newAsset.monthlyPaymentRt = 0;
+  }
+  else if (newType === "stock") {
+    newAsset.symbolId = "";
+    newAsset.shareQty = 0;
+  }
+  else {
+    newAsset.balanceAmt = 0;
+  };
+  Asset.create(newAsset
+  , { isNewRecord:true })
+  .then (resp => {
+    console.log(`debt create=`,resp);
+    res.send(resp);
+  })
+  .catch (error => {
+    console.log(`debt error=`,error);
+    throw error;
+  })
+});
+
+// insert a new debt and return the generated id
+router.post("/debt/:id/:type", (req,res) => {
+  let newType = decodeURIComponent(req.params.type);
+  Debt.create({
+    personID: req.params.id,
+    typeCd: newType,
+    descriptionStr: 'new debt',
+    balanceAmt: 0,
+    annualPercentRt: 0,
+    monthlyPaymentRt: 0,
+  }, {
+    isNewRecord:true
+  })
+  .then (resp => {
+    console.log(`debt create=`,resp);
+    res.send(resp);
+  })
+  .catch (error => {
+    console.log(`debt error=`,error);
+    throw error
+  })
+});
+
 // get assets
 //  add prices to any stocks
 // get debts
@@ -98,132 +153,89 @@ router.get("/read/:id", (req,res) => {
 // insert new profile, creating profile and 1st asset "Cash"
 router.post("/write/:id", (req,res) => {
   console.log(`writing for personID=${req.params.id}`, req.body);
-  for (let a=0; a < req.body.assets.length; a++) {
-    if (req.body.assets[a].type==="stock") {
-      req.body.assets[a].amount = null;
-      req.body.assets[a].symbol = req.body.assets[a].symbol.toUpperCase();
-    }
-    console.log(`asset=`,req.body.assets[a]);
-    if (req.body.assets[a].id < 0) {
-      let newID = Asset.create({
-        personID: req.params.id,
-        typeCd: req.body.assets[a].type,
-        descriptionStr: req.body.assets[a].description,
-        balanceAmt: req.body.assets[a].amount,
-        annualPercentRt: req.body.assets[a].apr,
-        monthlyPaymentRt: req.body.assets[a].payment,
-        symbolID: req.body.assets[a].symbol,
-        shareQty: req.body.assets[a].shares
-      }, {
-        isNewRecord:true
-      })
-      .then(asset => {
-        console.log(`then asset=`,asset.dataValues);
-        req.body.assets[a].id = asset.dataValues.assetID;
-      })
-      .catch (error => {
-        throw error;
-      })
-    }
-    else if (req.body.assets[a].type === deleteStr) {
-      Asset.destroy({
-        where: {
-          assetID : req.body.assets[a].id
+  return sequelize.transaction(t => {
+    let promises = [];
+    for (let a=0; a < req.body.assets.length; a++) {
+      if (req.body.assets[a].type === deleteStr) {
+        let newPromise = Asset.destroy({
+          where: {
+            assetID : req.body.assets[a].id
+          }},{
+            transaction:t
+        })
+        promises.push(newPromise)
+      }
+      else {
+        let dbAmount = req.body.assets[a].amount;
+        let dbSymbol = null;
+        if (req.body.assets[a].type==="stock") {
+          dbSymbol = req.body.assets[a].symbol.toUpperCase();
+          dbAmount = null;
         }
-      })
-      .then (asset => {
-        console.log(`asset=`,asset);
-      })
-      .catch (error => {
-        throw error;
-      })
+        let newPromise = Asset.update({
+          typeCd: req.body.assets[a].type,
+          descriptionStr: req.body.assets[a].description,
+          balanceAmt: dbAmount,
+          annualPercentRt: req.body.assets[a].apr,
+          monthlyPaymentRt: req.body.assets[a].payment,
+          symbolID: dbSymbol,
+          shareQty: req.body.assets[a].shares
+        }, {
+          where: {
+            assetID : req.body.assets[a].id
+          }}, {
+            transaction:t
+        })
+        promises.push(newPromise)
+      }
     }
-    else {
-      Asset.update({
-        typeCd: req.body.assets[a].type,
-        descriptionStr: req.body.assets[a].description,
-        balanceAmt: req.body.assets[a].amount,
-        annualPercentRt: req.body.assets[a].apr,
-        monthlyPaymentRt: req.body.assets[a].payment,
-        symbolID: req.body.assets[a].symbol,
-        shareQty: req.body.assets[a].shares
-      }, {
-        where: {
-          assetID : req.body.assets[a].id
-        }
-      })
-      .then (asset => {
-        console.log(`asset=`,asset);
-      })
-      .catch ((error) => {
-        throw error;
-      })
+    for (let d=0; d < req.body.debts.length; d++) {
+      if (req.body.debts[d].type === deleteStr) {
+        let newPromise = Debt.destroy({
+          where: {
+            debtID : req.body.debts[d].id
+        }}, {
+          transaction:t
+        })
+        promises.push(newPromise)
+      }
+      else {
+        let newPromise = Debt.update({
+          typeCd: req.body.debts[d].type,
+          descriptionStr: req.body.debts[d].description,
+          balanceAmt: req.body.debts[d].amount,
+          annualPercentRt: req.body.debts[d].apr,
+          monthlyPaymentRt: req.body.debts[d].payment,
+          symbolID: req.body.debts[d].symbol,
+          shareQty: req.body.debts[d].shares
+        }, {
+          where: {
+            debtID : req.body.debts[d].id
+          }}, {
+            transaction:t
+        })
+        promises.push(newPromise)
+      }
     }
-  }
-  for (let d=0; d < req.body.debts.length; d++) {
-    console.log(`debt=`,req.body.debts[d]);
-    if (req.body.debts[d].id < 0) {
-      let newID = Debt.create({
-        typeCd: req.body.debts[d].type,
-        descriptionStr: req.body.debts[d].description,
-        balanceAmt: req.body.debts[d].amount,
-        annualPercentRt: req.body.debts[d].apr,
-        monthlyPaymentRt: req.body.debts[d].payment,
-      }, {
-        isNewRecord:true
-      })
-      .then(debt => {
-        console.log(`then debt=`,debt.dataValues);
-        req.body.debts[d].id = debt.dataValues.debtID;
-      })
-      .catch (error => {
-        throw error;
-      })
-    }
-    else if (req.body.debts[d].type === deleteStr) {
-      Debt.destroy({
-        where: {
-          debtID : req.body.debts[d].id
-        }
-      })
-      .then (debt => {
-        console.log(`debt=`,debt);
-      })
-      .catch (error => {
-        throw error;
-      })
-    }
-    else {
-      Debt.update({
-        typeCd: req.body.debts[d].type,
-        descriptionStr: req.body.debts[d].description,
-        balanceAmt: req.body.debts[d].amount,
-        annualPercentRt: req.body.debts[d].apr,
-        monthlyPaymentRt: req.body.debts[d].payment,
-        symbolID: req.body.debts[d].symbol,
-        shareQty: req.body.debts[d].shares
-      }, {
-        where: {
-          debtID : req.body.debts[d].id
-        }
-      })
-      .then (debt => {
-        console.log(`debt=`,debt);
-      })
-      .catch ((error) => {
-        throw error;
-      })
-    }
-  }
+    return Promise.all(promises)
+    .then(assetOrDebt => {
+      let aodReturn = [];
+      for (let i=0; i<assetOrDebt.length; i++) {
+        console.log(`assetOrDebt=`,assetOrDebt[i]);
+        aodReturn.push(assetOrDebt[i]);
+      }
+      return Promise.all(aodReturn);
+    })
+  })
 // need to wait for all the database updates before proceeding
-  sequelize.sync().then(() => {
-    // filter out deletes
-    let respObj = {
-      assets: req.body.assets.filter(asset => asset.type !== deleteStr),
-      debts: req.body.debts.filter(debt => debt.type !== deleteStr)
-    };
-    console.log(`respObj=`,respObj);
-    res.send(respObj);
+  .then(result => {
+    console.log(`result=`,result);
+    // filter out deletes -or- just ignore them...
+    res.send(result);
+    })
+  .catch(error => {
+    console.log(`error=`,error);
+    res.send(result);
   })
 });
 

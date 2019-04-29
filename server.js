@@ -11,6 +11,7 @@ const cors = require("cors");  // security
 const express = require("express");  // handles server events
 const morgan = require("morgan");
 const winston = require("winston");
+require('winston-daily-rotate-file');
 
 const {sequelize} = require ("./database/connection");
 const {Op} = require("./database/connection");
@@ -32,18 +33,37 @@ app.use(cors({corsOptions}));
 
 // set up logging middleware
 //! remove the console logging after testing.
+let combinedLog = new (winston.transports.DailyRotateFile)({
+  filename: 'combined-%DATE%.log',
+  datePattern: 'YYYY-MM-DD-HH',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d'
+});
+let errorLog = new (winston.transports.DailyRotateFile)({
+  filename: 'error-%DATE%.log',
+  datePattern: 'YYYY-MM-DD-HH',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d',
+  level: "error"
+});
+
+combinedLog.on('rotate', function(oldFilename, newFilename) {
+  console.log(`combined log rotated`);
+});
+errorLog.on('rotate', function(oldFilename, newFilename) {
+  console.log(`error log rotated`);
+});
+
 const logger = winston.createLogger({
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({
-      filename: "error.log",
-      level: "error"
-    }),
-    new winston.transports.File({
-      filename: "combined.log"
-    })
+    errorLog,
+    combinedLog
   ]
 });
+
 logger.stream = {
   write(message, encoding) {
     logger.info(message)

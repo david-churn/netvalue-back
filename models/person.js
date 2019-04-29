@@ -20,11 +20,6 @@ const Person = sequelize.define('person', {
     allowNull: false,
     defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
   },
-  lastLogInTsp: {
-    type: Sequelize.DATE,
-    allowNull: false,
-    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
-  },
   gID: {
     type: Sequelize.CHAR(28),
     allowNull: false,

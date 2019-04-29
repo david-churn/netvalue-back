@@ -1,9 +1,11 @@
-"use strict"
+"use strict";
 // Handle requests dealing with the users profile.
 
 const express = require("express");
 const {sequelize} = require ("../database/connection");
 const {Op} = require("../database/connection");
+const {Asset} = require("../models/asset");
+const {Debt} = require("../models/debt");
 const {Person} = require("../models/person");
 
 let router = express.Router();
@@ -25,9 +27,34 @@ router.get("/gid/:gid", (req,res) => {
 });
 
 // delete from all tables
-router.delete("/", (req,res) => {
-  const data = {title: "Homepage"};
-  res.send(data);
+router.delete("/deluser/:personID", (req,res) => {
+  Asset.destroy({
+    where: {
+      personID : req.params.personID
+  }})
+  .then (aResp => {
+    console.log(`asset delete=`, aResp);
+    Debt.destroy({
+      where: {
+        personID : req.params.personID
+    }})
+  })
+  .then (dResp => {
+    console.log(`debt delete=`, dResp);
+    Person.destroy({
+      where: {
+        personID : req.params.personID
+    }})
+  })
+  .then (pResp => {
+    console.log(`person delete=`, pResp);
+    res.send(`removed personID=${req.params.personID}`);
+  })
+  .catch (error => {
+    console.log(`debt error=`,error);
+    res.send(error);
+    throw error;
+  })
 });
 
 // insert new profile, creating profile and 1st asset "Cash"
