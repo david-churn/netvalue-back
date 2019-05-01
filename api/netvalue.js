@@ -6,7 +6,6 @@ const _ = require("lodash");
 const axios = require("axios");
 const express = require("express");
 const {sequelize} = require ("../database/connection");
-const {Op} = require("../database/connection");
 const {Asset} = require("../models/asset");
 const {Debt} = require("../models/debt");
 

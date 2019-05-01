@@ -2,19 +2,15 @@
 // 4/5/2019 David Churn created
 
 // core modules
-const fs = require("fs");
+// const fs = require("fs");
 
 // 3rd party references
-const axios = require("axios");
 const bodyParser = require("body-parser");  // JSON parser
 const cors = require("cors");  // security
 const express = require("express");  // handles server events
 const morgan = require("morgan");
 const winston = require("winston");
 require('winston-daily-rotate-file');
-
-const {sequelize} = require ("./database/connection");
-const {Op} = require("./database/connection");
 
 // local references
 const lookup = require("./api/iex-lookup");
