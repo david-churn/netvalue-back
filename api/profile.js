@@ -29,26 +29,28 @@ router.get("/gid/:gid", (req,res) => {
     //   plain: true
     // });
     personObj = person.dataValues;
-    console.log(`created=${created} personObj=`,personObj);
+    console.log(`created=${created}`);
+    console.log(`personObj=`,personObj);
 // build & create the special Cash asset
     if (created) {
       let cashAsset = {
         personID: personObj.personID,
-        typeCD: "other",
-        desciptionStr: "Cash",
+        typeCd: "other",
+        descriptionStr: "Cash",
         balanceAmt: 0
       };
       console.log(`cashAsset=`,cashAsset);
-      return Asset.create(cashAsset
+      Asset.create(cashAsset
       , { isNewRecord:true });
     }
     else {
-      return
+      console.log(`Returning person`);
+      return (`response`);
     }
   })
   .then (resp => {
     console.log(`resp=`,resp);
-    res.send(personObj)
+    res.send(personObj);
   })
   .catch (error => {
     res.send(error);

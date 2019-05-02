@@ -31,14 +31,14 @@ app.use(cors({corsOptions}));
 //! remove the console logging after testing.
 let combinedLog = new (winston.transports.DailyRotateFile)({
   filename: './logs/combined-%DATE%.log',
-  datePattern: 'YYYY-MM-DD-HH',
+  datePattern: 'YYYY-MM-DD',
   zippedArchive: true,
   maxSize: '20m',
   maxFiles: '14d'
 });
 let errorLog = new (winston.transports.DailyRotateFile)({
   filename: './logs/error-%DATE%.log',
-  datePattern: 'YYYY-MM-DD-HH',
+  datePattern: 'YYYY-MM-DD',
   zippedArchive: true,
   maxSize: '20m',
   maxFiles: '14d',
