@@ -36,12 +36,11 @@ router.post("/asset/:id/:type", (req,res) => {
   Asset.create(newAsset
   , { isNewRecord:true })
   .then (resp => {
-    console.log(`debt create=`,resp);
     res.send(resp);
   })
   .catch (error => {
-    console.log(`debt error=`,error);
-    throw error;
+    logger.error(`asset create error=`,error);
+    res.send(`server error`);
   })
 });
 
@@ -59,12 +58,11 @@ router.post("/debt/:id/:type", (req,res) => {
     isNewRecord:true
   })
   .then (resp => {
-    console.log(`debt create=`,resp);
     res.send(resp);
   })
   .catch (error => {
-    console.log(`debt error=`,error);
-    throw error
+    logger.error(`debt create error=`,error);
+    res.send(`server error`);
   })
 });
 
@@ -99,11 +97,8 @@ router.get("/read/:id", (req,res) => {
       }
       return feObj;
     });
-    console.log(`resultObj=`,resultObj);
-    console.log(`lookupSymbols=${lookupSymbols}`);
     if (lookupSymbols !== "") {
       let requestStr = iexUrlStr + 'market/batch?symbols=' + lookupSymbols + '&types=quote';
-      console.log(`requestStr=${requestStr}`);
       return axios.get(requestStr)
     }
     else {
@@ -123,7 +118,6 @@ router.get("/read/:id", (req,res) => {
         resultObj.assets[assetIdx].amount = Number(resp.data[symbol].quote.latestPrice * resultObj.assets[assetIdx].shares).toFixed(2);
       });
     }
-    console.log(`read Debts`);
     return Debt.findAll({
       where: {
         personID: req.params.id,
@@ -145,13 +139,13 @@ router.get("/read/:id", (req,res) => {
     res.send(resultObj);
   })
   .catch ((error) => {
-    res.send(error);
+    logger.error(`read all error=`,error);
+    res.send(`server error`);
   })
 });
 
 // insert new profile, creating profile and 1st asset "Cash"
 router.post("/write/:id", (req,res) => {
-  console.log(`writing for personID=${req.params.id}`, req.body);
   return sequelize.transaction(t => {
     let promises = [];
     for (let a=0; a < req.body.assets.length; a++) {
@@ -220,7 +214,6 @@ router.post("/write/:id", (req,res) => {
     .then(assetOrDebt => {
       let aodReturn = [];
       for (let i=0; i<assetOrDebt.length; i++) {
-        console.log(`assetOrDebt=`,assetOrDebt[i]);
         aodReturn.push(assetOrDebt[i]);
       }
       return Promise.all(aodReturn);
@@ -228,13 +221,12 @@ router.post("/write/:id", (req,res) => {
   })
 // need to wait for all the database updates before proceeding
   .then(result => {
-    console.log(`result=`,result);
     // filter out deletes -or- just ignore them...
     res.send(result);
     })
   .catch(error => {
-    console.log(`error=`,error);
-    res.send(result);
+    logger.error(`write all error=`,error);
+    res.send(`server error`);
   })
 });
 

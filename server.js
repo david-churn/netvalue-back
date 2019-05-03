@@ -1,15 +1,13 @@
 "use strict";
 // 4/5/2019 David Churn created
 
-// core modules
-// const fs = require("fs");
-
 // 3rd party references
 const bodyParser = require("body-parser");  // JSON parser
 const cors = require("cors");  // security
 const express = require("express");  // handles server events
 const morgan = require("morgan");
 const winston = require("winston");
+const {format} = require("winston");
 require('winston-daily-rotate-file');
 
 // local references
@@ -53,6 +51,10 @@ errorLog.on('rotate', function(oldFilename, newFilename) {
 });
 
 const logger = winston.createLogger({
+  format: format.combine(
+    format.timestamp(),
+    format.json()
+  ),
   transports: [
     new winston.transports.Console(),
     errorLog,
@@ -86,4 +88,5 @@ app.use("/nv", netvalue);
 
 app.listen(3000, () => {
   console.log(`>>> Net Value server started <<<`);
+  logger.error(`Net Value server started`);
 })

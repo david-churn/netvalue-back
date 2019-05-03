@@ -22,15 +22,13 @@ const iexUrlStr = "https://api.iextrading.com/1.0/stock/";
 // note, the symbol field was encoded by the caller.
 router.get("/price/:symbol", (req,res) => {
   let iexRequest = iexUrlStr + req.params.symbol + iexPriceStr;
-  console.log(`iexRequest=${iexRequest}`);
   axios.get(iexRequest)
     .then ((resp) => {
-      console.log(`iex response=`,resp.data);
       res.send(resp.data);
     })
     .catch ((error) => {
-      console.log(`iex error=`,error);
-      res.send(error);
+      logger.error(`iex price error=`,error);
+      res.send(`server error`);
     })
 });
 
@@ -38,20 +36,16 @@ router.get("/price/:symbol", (req,res) => {
 router.get("/company/:symbol", (req,res) => {
   let iexRequest = iexUrlStr + req.params.symbol + iexPriceStr;
   let stockObj = {};
-  console.log(`iexRequest=${iexRequest}`);
   axios.get(iexRequest)
     .then ((resp) => {
-      console.log(`price=`,resp.data);
       this.stockObj = resp.data;
       this.stockObj.symbol = req.params.symbol;
     })
     .then ( () => {
       iexRequest = iexUrlStr + req.params.symbol + iexCompanyStr;
-      console.log(`iexRequest=${iexRequest}`);
       return axios.get(iexRequest)
     })
     .then ((resp) => {
-      console.log(`company=`,resp.data);
       this.stockObj.companyName = resp.data.companyName;
       this.stockObj.exchange = resp.data.exchange;
       this.stockObj.industry = resp.data.industry;
@@ -60,8 +54,8 @@ router.get("/company/:symbol", (req,res) => {
       res.send(this.stockObj);
     })
     .catch ((error) => {
-      console.log(`post error=`,error);
-      res.send(error);
+      logger.error(`iex company error=`,error);
+      res.send(`server error`);
     })
 });
 

@@ -25,12 +25,7 @@ router.get("/gid/:gid", (req,res) => {
     }
   })
   .then(([person, created]) => {
-    // personObj=person.get({
-    //   plain: true
-    // });
     personObj = person.dataValues;
-    console.log(`created=${created}`);
-    console.log(`personObj=`,personObj);
 // build & create the special Cash asset
     if (created) {
       let cashAsset = {
@@ -39,21 +34,19 @@ router.get("/gid/:gid", (req,res) => {
         descriptionStr: "Cash",
         balanceAmt: 0
       };
-      console.log(`cashAsset=`,cashAsset);
       Asset.create(cashAsset
       , { isNewRecord:true });
     }
     else {
-      console.log(`Returning person`);
       return (`response`);
     }
   })
   .then (resp => {
-    console.log(`resp=`,resp);
     res.send(personObj);
   })
   .catch (error => {
-    res.send(error);
+    logger.error(`findOrCreate error=`,error);
+    res.send(`server error`);
   })
 });
 
@@ -64,27 +57,23 @@ router.delete("/deluser/:personID", (req,res) => {
       personID : req.params.personID
   }})
   .then (aResp => {
-    console.log(`asset delete=`, aResp);
     Debt.destroy({
       where: {
         personID : req.params.personID
     }})
   })
   .then (dResp => {
-    console.log(`debt delete=`, dResp);
     Person.destroy({
       where: {
         personID : req.params.personID
     }})
   })
   .then (pResp => {
-    console.log(`person delete=`, pResp);
     res.send(`removed personID=${req.params.personID}`);
   })
   .catch (error => {
-    console.log(`debt error=`,error);
-    res.send(error);
-    throw error;
+    logger.error(`destroy error=`,error);
+    res.send(`server error`);
   })
 });
 
@@ -104,7 +93,8 @@ router.patch("/upduser/:id", (req,res) => {
     res.send(`updated`);
   })
   .catch ((error) => {
-    res.send(error);
+    logger.error(`person update error=`,error);
+    res.send(`server error`);
   })
 });
 
