@@ -1,5 +1,6 @@
 "use strict";
 // 4/5/2019 David Churn created
+// 5/6/2019 David Churn modified to deploy
 
 // 3rd party references
 const bodyParser = require("body-parser");  // JSON parser
@@ -17,11 +18,12 @@ const profile = require("./api/profile");
 
 // set up security options
 let corsOptions = {
-  origin: "http://localhost:8080",
+  origin: "https://warm-atoll-80387.herokuapp.com",
   optionsSuccessStatus: 200
 };
 
 const app = express();
+const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(cors({corsOptions}));
 
@@ -86,7 +88,6 @@ app.use("/stock", lookup);
 // Handle saving and reading asset and debt items.
 app.use("/nv", netvalue);
 
-app.listen(3000, () => {
-  console.log(`>>> Net Value server started <<<`);
+app.listen(port, () => {
   logger.error(`Net Value server started`);
 })
